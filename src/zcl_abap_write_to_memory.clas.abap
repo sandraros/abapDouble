@@ -66,26 +66,29 @@ CLASS zcl_abap_write_to_memory IMPLEMENTATION.
 
   METHOD zif_abap~write.
     DATA lv_text      TYPE string.
-    DATA lv_last_line TYPE REF TO string.
     DATA lv_tabix     TYPE i.
+    DATA lv_last_line TYPE REF TO string.
 
+    FIELD-SYMBOLS <lt_itab_to_write_to> TYPE string_table.
+
+    ASSIGN gt_itab_to_write_to->* TO <lt_itab_to_write_to>.
     lv_text = iv_text.
     IF iv_same_line = abap_false.
       IF iv_position IS INITIAL.
-        INSERT lv_text INTO TABLE gt_itab_to_write_to->*.
+        INSERT lv_text INTO TABLE <lt_itab_to_write_to>.
       ELSE.
         lv_text = repeat( val = ` `
                           occ = iv_position - 1 )
                   && lv_text.
         INSERT lv_text
-                       INTO TABLE gt_itab_to_write_to->*.
+               INTO TABLE <lt_itab_to_write_to>.
       ENDIF.
     ELSE.
       IF gt_itab_to_write_to->* IS INITIAL.
-        INSERT lv_text INTO TABLE gt_itab_to_write_to->*.
+        INSERT lv_text INTO TABLE <lt_itab_to_write_to>.
       ELSE.
-        lv_tabix = lines( gt_itab_to_write_to->* ).
-        READ TABLE gt_itab_to_write_to->* INDEX lv_tabix REFERENCE INTO lv_last_line.
+        lv_tabix = lines( <lt_itab_to_write_to> ).
+        READ TABLE <lt_itab_to_write_to> INDEX lv_tabix REFERENCE INTO lv_last_line.
         ASSERT sy-subrc = 0.
         IF iv_position IS INITIAL.
           lv_last_line->* = lv_last_line->* && ` ` && lv_text.

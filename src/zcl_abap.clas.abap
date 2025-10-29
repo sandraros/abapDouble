@@ -97,13 +97,17 @@ CLASS zcl_abap IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abap~message.
+    DATA lv_display_like TYPE symsgty.
+
     IF iv_use_system_message = abap_true.
       MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
               WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ELSE.
-      DATA(lv_display_like) = COND symsgty( WHEN iv_display_like IS NOT INITIAL
-                                            THEN iv_display_like
-                                            ELSE iv_mtype ).
+      IF iv_display_like IS NOT INITIAL.
+        lv_display_like = iv_display_like.
+      ELSE.
+        lv_display_like = iv_mtype.
+      ENDIF.
       MESSAGE iv_text TYPE iv_mtype DISPLAY LIKE lv_display_like.
     ENDIF.
   ENDMETHOD.
