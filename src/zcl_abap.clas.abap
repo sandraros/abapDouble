@@ -18,7 +18,7 @@ CLASS zcl_abap DEFINITION
   PRIVATE SECTION.
     CLASS-DATA go_singleton TYPE REF TO zif_abap.
 
-    DATA t_write_to_memory_data TYPE string_table.
+    DATA t_write_to_memory_data     TYPE string_table.
     DATA o_redirect_write_to_memory TYPE REF TO zcl_abap_write_to_memory.
 
     CLASS-METHODS set_singleton
@@ -33,16 +33,21 @@ CLASS zcl_abap IMPLEMENTATION.
 
   METHOD get_singleton.
     IF go_singleton IS NOT BOUND.
-      go_singleton = NEW zcl_abap( ).
+      CREATE OBJECT go_singleton TYPE zcl_abap.
     ENDIF.
     ro_result = go_singleton.
   ENDMETHOD.
 
   METHOD redirect_write_to_memory.
+    DATA lv_reference_write_to_memory TYPE REF TO string_table.
+
     IF iv_redirect = abap_true.
-      o_redirect_write_to_memory = NEW zcl_abap_write_to_memory( REF #( t_write_to_memory_data ) ).
+      GET REFERENCE OF t_write_to_memory_data INTO lv_reference_write_to_memory.
+      CREATE OBJECT o_redirect_write_to_memory TYPE zcl_abap_write_to_memory
+        EXPORTING
+          it_itab_to_write_to = lv_reference_write_to_memory.
     ELSE.
-      o_redirect_write_to_memory = VALUE #( ).
+      CLEAR o_redirect_write_to_memory.
     ENDIF.
   ENDMETHOD.
 
@@ -67,9 +72,11 @@ CLASS zcl_abap IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abap~get_sy_repid.
+    DATA lt_abap_call_stack TYPE cl_abap_get_call_stack=>formatted_entry_stack.
+
     " In this class, SY-REPID equals ZCL_abap======================CP.
     " It's neede to simulate SY-REPID in the calling program by looking at the ABAP call stack.
-    DATA(lt_abap_call_stack) = cl_abap_get_call_stack=>format_call_stack_with_struct( cl_abap_get_call_stack=>get_call_stack( ) ).
+    lt_abap_call_stack = cl_abap_get_call_stack=>format_call_stack_with_struct( cl_abap_get_call_stack=>get_call_stack( ) ).
     rv_result = lt_abap_call_stack[ 2 ]-progname.
   ENDMETHOD.
 
@@ -110,7 +117,7 @@ CLASS zcl_abap IMPLEMENTATION.
            IN TEXT MODE
            ENCODING DEFAULT
            MESSAGE ev_message.
-    ELSEIF     iv_for = zif_abap=>cs_open_dataset-for-output
+    ELSEIF     iv_for                        = zif_abap=>cs_open_dataset-for-output
            AND iv_in_mode                    = zif_abap=>cs_open_dataset-in_mode-legacy_text
            AND iv_ignoring_conversion_errors = abap_true.
       OPEN DATASET iv_file_path
@@ -127,7 +134,7 @@ CLASS zcl_abap IMPLEMENTATION.
            ENCODING DEFAULT
            MESSAGE ev_message.
 
-    ELSEIF     iv_for = zif_abap=>cs_open_dataset-for-appending
+    ELSEIF     iv_for                        = zif_abap=>cs_open_dataset-for-appending
            AND iv_in_mode                    = zif_abap=>cs_open_dataset-in_mode-legacy_text
            AND iv_ignoring_conversion_errors = abap_true.
       OPEN DATASET iv_file_path
@@ -195,8 +202,15 @@ CLASS zcl_abap IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abap~write_to.
-    DATA(lt_itab_to_write_to) = VALUE string_table( ).
-    DATA(lo_write_to_itab) = NEW zcl_abap_write_to_memory( REF #( lt_itab_to_write_to ) ).
+    DATA lt_itab_to_write_to           TYPE string_table.
+    DATA lv_reference_itab_to_write_to TYPE REF TO string_table.
+    DATA lo_write_to_itab              TYPE REF TO zcl_abap_write_to_memory.
+
+    CLEAR lt_itab_to_write_to.
+    GET REFERENCE OF lt_itab_to_write_to INTO lv_reference_itab_to_write_to.
+    CREATE OBJECT lo_write_to_itab TYPE zcl_abap_write_to_memory
+      EXPORTING
+        it_itab_to_write_to = lv_reference_itab_to_write_to.
     lo_write_to_itab->zif_abap~write( iv_text ).
     rv_field = lt_itab_to_write_to[ 1 ].
   ENDMETHOD.
