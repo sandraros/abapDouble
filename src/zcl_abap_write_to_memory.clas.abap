@@ -65,11 +65,13 @@ CLASS zcl_abap_write_to_memory IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abap~write.
+    TYPES tt_string_table TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
+
     DATA lv_text      TYPE string.
     DATA lv_tabix     TYPE i.
     DATA lv_last_line TYPE REF TO string.
 
-    FIELD-SYMBOLS <lt_itab_to_write_to> TYPE string_table.
+    FIELD-SYMBOLS <lt_itab_to_write_to> TYPE tt_string_table.
 
     ASSIGN gt_itab_to_write_to->* TO <lt_itab_to_write_to>.
     lv_text = iv_text.

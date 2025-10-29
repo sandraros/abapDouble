@@ -63,7 +63,7 @@ CLASS ztd_abap DEFINITION
         display_like TYPE symsgty,
       END OF ts_message.
     TYPES tt_message   TYPE SORTED TABLE OF ts_message WITH NON-UNIQUE KEY timestamp.
-    TYPES tt_abap_list TYPE string_table.
+    TYPES tt_abap_list TYPE STANDARD TABLE OF string WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ts_internal_session,
         abap_list TYPE tt_abap_list,
@@ -259,7 +259,10 @@ CLASS ztd_abap IMPLEMENTATION.
     DATA lv_last_line TYPE REF TO string.
     DATA lv_tabix     TYPE i.
 
-    FIELD-SYMBOLS <lt_abap_list> TYPE ts_internal_session-abap_list.
+* Start fix 2 for abaplint 7.02
+    FIELD-SYMBOLS <lt_abap_list> TYPE tt_abap_list.
+*    FIELD-SYMBOLS <lt_abap_list> TYPE ts_internal_session-abap_list.
+* Start fix 2 for abaplint 7.02
 
     lv_text = iv_text.
     IF iv_same_line = abap_false.
@@ -276,11 +279,11 @@ CLASS ztd_abap IMPLEMENTATION.
         INSERT lv_text INTO TABLE gs_internal_session->abap_list.
       ELSE.
         lv_tabix = lines( gs_internal_session->abap_list ).
-* Start fix for abaplint 7.02
+* Start fix 1 for abaplint 7.02
         ASSIGN gs_internal_session->abap_list TO <lt_abap_list>.
         READ TABLE <lt_abap_list> INDEX lv_tabix REFERENCE INTO lv_last_line.
 *        READ TABLE gs_internal_session->abap_list INDEX lv_tabix REFERENCE INTO lv_last_line.
-* End fix for abaplint 7.02
+* End fix 1 for abaplint 7.02
         ASSERT sy-subrc = 0.
         IF iv_position IS INITIAL.
           lv_last_line->* = lv_last_line->* && ` ` && lv_text.
